@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Dashboard — Exclusive Club</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0b0c1a; color: #e5e7eb; }
+
+        /* ── Header ──────────────────────────────────────── */
+        .header {
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            padding: 16px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header-title { display: flex; align-items: center; gap: 10px; }
+        .header-title h1 { font-size: 18px; font-weight: 700; color: #fff; }
+        .header-title .badge {
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: white; font-size: 10px; font-weight: 700;
+            padding: 3px 10px; border-radius: 100px; letter-spacing: 1px;
+        }
+        .header a { color: #6b7280; font-size: 13px; text-decoration: none; }
+        .header a:hover { color: #a78bfa; }
+
+        /* ── Flash Messages ──────────────────────────────── */
+        .flash {
+            margin: 16px 30px 0;
+            padding: 12px 16px; border-radius: 10px; font-size: 13px;
+        }
+        .flash-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+        .flash-error   { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.3);  color: #fca5a5; }
+
+        /* ── Stats Grid ──────────────────────────────────── */
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                 gap: 14px; padding: 24px 30px 0; }
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 18px; text-align: center;
+        }
+        .stat-num  { font-size: 32px; font-weight: 800; }
+        .stat-label{ font-size: 11px; color: #6b7280; margin-top: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .c-purple { color: #a78bfa; }
+        .c-green  { color: #4ade80; }
+        .c-yellow { color: #fbbf24; }
+        .c-red    { color: #f87171; }
+        .c-blue   { color: #60a5fa; }
+
+        /* ── Capacity Bar ────────────────────────────────── */
+        .capacity-section { padding: 16px 30px; }
+        .cap-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+        .cap-row span:first-child { color: #9ca3af; }
+        .cap-row span:last-child  { color: #a78bfa; font-weight: 600; }
+        .bar-track { background: rgba(255,255,255,0.07); border-radius: 100px; height: 8px; }
+        .bar-fill  { height: 8px; border-radius: 100px;
+                     background: linear-gradient(90deg, #4ade80, #a78bfa); }
+
+        /* ── Section ─────────────────────────────────────── */
+        .section { padding: 20px 30px; }
+        .section-title {
+            font-size: 14px; font-weight: 700; color: #9ca3af;
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 14px; padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        /* ── Table ───────────────────────────────────────── */
+        .table-wrap { overflow-x: auto; border-radius: 12px;
+                      border: 1px solid rgba(255,255,255,0.07); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th {
+            background: rgba(255,255,255,0.04);
+            padding: 10px 14px; text-align: left;
+            color: #6b7280; font-weight: 600; white-space: nowrap;
+        }
+        td { padding: 11px 14px; border-top: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* ── Badges ──────────────────────────────────────── */
+        .badge-status {
+            display: inline-block; padding: 3px 10px; border-radius: 100px;
+            font-size: 11px; font-weight: 700;
+        }
+        .badge-pending  { background: rgba(251,191,36,0.12); border:1px solid rgba(251,191,36,0.3); color:#fbbf24; }
+        .badge-approved { background: rgba(74,222,128,0.12); border:1px solid rgba(74,222,128,0.3); color:#4ade80; }
+        .badge-rejected { background: rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.3);color:#f87171; }
+
+        .badge-type {
+            display: inline-block; padding: 2px 8px; border-radius: 6px;
+            font-size: 11px; font-weight: 600;
+        }
+        .type-silver  { background: rgba(156,163,175,0.15); color: #d1d5db; }
+        .type-gold    { background: rgba(251,191,36,0.15);  color: #fbbf24; }
+        .type-platinum{ background: rgba(167,139,250,0.15); color: #a78bfa; }
+
+        /* ── Action Buttons ──────────────────────────────── */
+        .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .btn-approve, .btn-reject, .btn-delete {
+            border: none; padding: 5px 12px; border-radius: 6px;
+            font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity .2s;
+        }
+        .btn-approve { background: rgba(74,222,128,0.15); border:1px solid rgba(74,222,128,0.3);  color:#4ade80; }
+        .btn-reject  { background: rgba(248,113,113,0.15);border:1px solid rgba(248,113,113,0.3); color:#f87171; }
+        .btn-delete  { background: rgba(156,163,175,0.1); border:1px solid rgba(156,163,175,0.2); color:#6b7280; }
+        .btn-approve:hover, .btn-reject:hover, .btn-delete:hover { opacity: .8; }
+
+        .empty-state { text-align: center; padding: 30px; color: #4b5563; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <div class="header-title">
+        <span style="font-size:20px">⭐</span>
+        <h1>Exclusive Club</h1>
+        <span class="badge">ADMIN</span>
+    </div>
+    <a href="/register">← Registration Page</a>
+</div>
+
+<!-- Flash Messages -->
+<div class="flash flash-success" th:if="${successMsg}" th:text="${successMsg}"></div>
+<div class="flash flash-error"   th:if="${errorMsg}"   th:text="${errorMsg}"></div>
+
+<!-- Stats -->
+<div class="stats">
+    <div class="stat-card">
+        <div class="stat-num c-purple" th:text="${stats.total}">0</div>
+        <div class="stat-label">Total Applications</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num c-green"  th:text="${stats.approved}">0</div>
+        <div class="stat-label">Approved</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num c-yellow" th:text="${stats.pending}">0</div>
+        <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num c-red"    th:text="${stats.rejected}">0</div>
+        <div class="stat-label">Rejected</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num c-blue"   th:text="${stats.slotsRemaining}">100</div>
+        <div class="stat-label">Slots Remaining</div>
+    </div>
+</div>
+
+<!-- Capacity Bar -->
+<div class="capacity-section">
+    <div class="cap-row">
+        <span>Club Capacity</span>
+        <span th:text="${stats.approved} + ' / ' + ${stats.maxSlots} + ' members'">0/100</span>
+    </div>
+    <div class="bar-track">
+        <div class="bar-fill" th:style="'width:' + ${stats.capacityPct} + '%'"></div>
+    </div>
+</div>
+
+<!-- Pending Applications -->
+<div class="section">
+    <div class="section-title">
+        ⏳ Pending Applications
+        <span th:text="'(' + ${stats.pending} + ')'"></span>
+    </div>
+
+    <div class="table-wrap" th:if="${stats.pending > 0}">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Age</th>
+                <th>Type</th>
+                <th>Registered</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="m : ${pendingMembers}">
+                <td style="color:#6b7280" th:text="'#' + ${m.id}"></td>
+                <td style="font-weight:600" th:text="${m.fullName}"></td>
+                <td style="color:#9ca3af" th:text="${m.email}"></td>
+                <td th:text="${m.phone}"></td>
+                <td th:text="${m.age}"></td>
+                <td>
+                    <span th:text="${m.membershipType}"
+                          th:classappend="${m.membershipType == 'GOLD'} ? 'badge-type type-gold' : (${m.membershipType == 'PLATINUM'} ? 'badge-type type-platinum' : 'badge-type type-silver')"
+                          class="badge-type"></span>
+                </td>
+                <td style="color:#6b7280" th:text="${#temporals.format(m.registeredAt, 'dd MMM yyyy')}"></td>
+                <td>
+                    <div class="actions">
+                        <form th:action="@{/admin/approve/{id}(id=${m.id})}" method="post">
+                            <button class="btn-approve" type="submit">✓ Approve</button>
+                        </form>
+                        <form th:action="@{/admin/reject/{id}(id=${m.id})}" method="post">
+                            <input type="hidden" name="note" value="Does not meet membership requirements"/>
+                            <button class="btn-reject" type="submit">✗ Reject</button>
+                        </form>
+                        <form th:action="@{/admin/delete/{id}(id=${m.id})}" method="post">
+                            <button class="btn-delete" type="submit"
+                                    onclick="return confirm('Delete this record?')">🗑</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="empty-state" th:if="${stats.pending == 0}">No pending applications at this time.</div>
+</div>
+
+<!-- All Members -->
+<div class="section">
+    <div class="section-title">📋 All Applications
+        <span th:text="'(' + ${stats.total} + ')'"></span>
+    </div>
+
+    <div class="table-wrap" th:if="${stats.total > 0}">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th><th>Name</th><th>Email</th>
+                <th>Type</th><th>Age</th><th>Status</th><th>Registered</th><th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="m : ${allMembers}">
+                <td style="color:#6b7280" th:text="'#' + ${m.id}"></td>
+                <td style="font-weight:600" th:text="${m.fullName}"></td>
+                <td style="color:#9ca3af" th:text="${m.email}"></td>
+                <td>
+                    <span th:text="${m.membershipType}"
+                          th:classappend="${m.membershipType == 'GOLD'} ? 'badge-type type-gold' : (${m.membershipType == 'PLATINUM'} ? 'badge-type type-platinum' : 'badge-type type-silver')"
+                          class="badge-type"></span>
+                </td>
+                <td th:text="${m.age}"></td>
+                <td>
+                    <span th:if="${m.status.name() == 'PENDING'}"  class="badge-status badge-pending">PENDING</span>
+                    <span th:if="${m.status.name() == 'APPROVED'}" class="badge-status badge-approved">APPROVED</span>
+                    <span th:if="${m.status.name() == 'REJECTED'}" class="badge-status badge-rejected">REJECTED</span>
+                </td>
+                <td style="color:#6b7280" th:text="${#temporals.format(m.registeredAt, 'dd MMM yyyy')}"></td>
+                <td>
+                    <form th:action="@{/admin/delete/{id}(id=${m.id})}" method="post">
+                        <button class="btn-delete" type="submit"
+                                onclick="return confirm('Delete this record?')">🗑 Delete</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="empty-state" th:if="${stats.total == 0}">No applications yet.</div>
+</div>
+
+</body>
+</html>

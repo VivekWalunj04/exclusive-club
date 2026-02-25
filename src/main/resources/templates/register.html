@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Exclusive Club — Register</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0b0c1a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background-image:
+                radial-gradient(ellipse at 20% 20%, rgba(99,60,180,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(30,100,200,0.1) 0%, transparent 60%);
+        }
+
+        .page-wrapper { width: 100%; max-width: 580px; }
+
+        /* ── Header ──────────────────────────────────────── */
+        .club-header { text-align: center; margin-bottom: 28px; }
+        .club-badge {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: white; padding: 8px 20px; border-radius: 100px;
+            font-size: 11px; font-weight: 700; letter-spacing: 2px;
+            text-transform: uppercase; margin-bottom: 14px;
+        }
+        .club-header h1 { font-size: 30px; color: #fff; font-weight: 800; letter-spacing: -0.5px; }
+        .club-header p  { color: #6b7280; font-size: 14px; margin-top: 6px; }
+
+        /* ── Capacity Banner ─────────────────────────────── */
+        .capacity-bar-wrap {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+        }
+        .cap-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .cap-label { font-size: 12px; color: #9ca3af; }
+        .cap-value { font-size: 12px; font-weight: 600; color: #a78bfa; }
+        .bar-track { background: rgba(255,255,255,0.08); border-radius: 100px; height: 6px; }
+        .bar-fill  { height: 6px; border-radius: 100px;
+                     background: linear-gradient(90deg, #7c3aed, #a78bfa); transition: width .5s; }
+
+        /* ── Card ────────────────────────────────────────── */
+        .card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 16px;
+            padding: 36px;
+        }
+        .card h2 { font-size: 18px; color: #e5e7eb; font-weight: 700; margin-bottom: 24px; }
+
+        /* ── Alert ───────────────────────────────────────── */
+        .alert {
+            border-radius: 10px; padding: 14px 16px;
+            font-size: 13px; margin-bottom: 20px;
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .alert-error  { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.3);  color: #fca5a5; }
+        .alert-icon   { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+        /* ── Form Grid ───────────────────────────────────── */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full { grid-column: 1 / -1; }
+
+        label { font-size: 12px; font-weight: 600; color: #9ca3af; letter-spacing: 0.5px; text-transform: uppercase; }
+
+        input, select {
+            padding: 11px 14px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            color: #f3f4f6;
+            font-size: 14px;
+            outline: none;
+            transition: border-color .2s, background .2s;
+            width: 100%;
+        }
+        input::placeholder { color: #4b5563; }
+        input:focus, select:focus {
+            border-color: #7c3aed;
+            background: rgba(124,58,237,0.08);
+        }
+        input.is-error, select.is-error { border-color: #ef4444; }
+        select option { background: #1a1b2e; color: #f3f4f6; }
+
+        .field-error { font-size: 11px; color: #f87171; }
+
+        /* ── Submit ──────────────────────────────────────── */
+        .btn-submit {
+            width: 100%; padding: 14px; margin-top: 8px;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            border: none; border-radius: 10px;
+            color: white; font-size: 15px; font-weight: 700;
+            letter-spacing: 0.5px; cursor: pointer;
+            transition: opacity .2s, transform .1s;
+        }
+        .btn-submit:hover  { opacity: .9; }
+        .btn-submit:active { transform: scale(.99); }
+
+        /* ── Rules Footer ────────────────────────────────── */
+        .rules-row {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 8px; margin-top: 20px;
+        }
+        .rule-chip {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 8px; padding: 10px 12px;
+            font-size: 12px; color: #6b7280;
+        }
+        .rule-chip span { color: #a78bfa; font-size: 14px; }
+
+        .admin-link { text-align: center; margin-top: 18px; }
+        .admin-link a { font-size: 12px; color: #6b7280; text-decoration: none; }
+        .admin-link a:hover { color: #a78bfa; }
+
+        @media (max-width: 520px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full { grid-column: auto; }
+            .rules-row { grid-template-columns: 1fr; }
+            .card { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+    <!-- Header -->
+    <div class="club-header">
+        <div class="club-badge">⭐ Elite Membership</div>
+        <h1>Exclusive Club Portal</h1>
+        <p>Apply for membership — limited slots available</p>
+    </div>
+
+    <!-- Capacity Indicator -->
+    <div class="capacity-bar-wrap" th:if="${stats != null}">
+        <div class="cap-row">
+            <span class="cap-label">Club Capacity</span>
+            <span class="cap-value"
+                  th:text="${stats.approved} + ' / ' + ${stats.maxSlots} + ' members'">0/100</span>
+        </div>
+        <div class="bar-track">
+            <div class="bar-fill" th:style="'width:' + ${stats.capacityPct} + '%'"></div>
+        </div>
+    </div>
+
+    <!-- Card -->
+    <div class="card">
+        <h2>📋 Membership Application</h2>
+
+        <!-- Business Rule Error -->
+        <div class="alert alert-error" th:if="${errorMessage}">
+            <span class="alert-icon">⚠️</span>
+            <span th:text="${errorMessage}">Error message here</span>
+        </div>
+
+        <form th:action="@{/register}" th:object="${member}" method="post" novalidate>
+            <div class="form-grid">
+
+                <!-- Full Name -->
+                <div class="form-group full">
+                    <label for="fullName">Full Name *</label>
+                    <input id="fullName" type="text" th:field="*{fullName}"
+                           th:classappend="${#fields.hasErrors('fullName')} ? 'is-error'"
+                           placeholder="Your full legal name"/>
+                    <span class="field-error" th:if="${#fields.hasErrors('fullName')}"
+                          th:errors="*{fullName}"></span>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input id="email" type="email" th:field="*{email}"
+                           th:classappend="${#fields.hasErrors('email')} ? 'is-error'"
+                           placeholder="you@example.com"/>
+                    <span class="field-error" th:if="${#fields.hasErrors('email')}"
+                          th:errors="*{email}"></span>
+                </div>
+
+                <!-- Phone -->
+                <div class="form-group">
+                    <label for="phone">Phone Number *</label>
+                    <input id="phone" type="text" th:field="*{phone}"
+                           th:classappend="${#fields.hasErrors('phone')} ? 'is-error'"
+                           placeholder="+91XXXXXXXXXX"/>
+                    <span class="field-error" th:if="${#fields.hasErrors('phone')}"
+                          th:errors="*{phone}"></span>
+                </div>
+
+                <!-- Date of Birth -->
+                <div class="form-group">
+                    <label for="dateOfBirth">Date of Birth * (18+)</label>
+                    <input id="dateOfBirth" type="date" th:field="*{dateOfBirth}"
+                           th:classappend="${#fields.hasErrors('dateOfBirth')} ? 'is-error'"/>
+                    <span class="field-error" th:if="${#fields.hasErrors('dateOfBirth')}"
+                          th:errors="*{dateOfBirth}"></span>
+                </div>
+
+                <!-- Membership Type -->
+                <div class="form-group">
+                    <label for="membershipType">Membership Type *</label>
+                    <select id="membershipType" th:field="*{membershipType}"
+                            th:classappend="${#fields.hasErrors('membershipType')} ? 'is-error'">
+                        <option value="">-- Select Tier --</option>
+                        <option value="SILVER">🥈 Silver</option>
+                        <option value="GOLD">🥇 Gold</option>
+                        <option value="PLATINUM">💎 Platinum</option>
+                    </select>
+                    <span class="field-error" th:if="${#fields.hasErrors('membershipType')}"
+                          th:errors="*{membershipType}"></span>
+                </div>
+
+                <!-- Address -->
+                <div class="form-group full">
+                    <label for="address">Address</label>
+                    <input id="address" type="text" th:field="*{address}"
+                           placeholder="City, State, Country"/>
+                </div>
+
+            </div>
+
+            <button type="submit" class="btn-submit">🚀 Submit Application</button>
+        </form>
+
+        <!-- Membership Rules -->
+        <div class="rules-row">
+            <div class="rule-chip"><span>🔞</span> Must be 18 years or older</div>
+            <div class="rule-chip"><span>📧</span> One account per email</div>
+            <div class="rule-chip"><span>🪑</span> Limited slots available</div>
+            <div class="rule-chip"><span>✅</span> Admin approval required</div>
+        </div>
+    </div>
+
+    <div class="admin-link">
+        <a href="/admin">Admin Panel →</a>
+    </div>
+
+</div>
+</body>
+</html>
